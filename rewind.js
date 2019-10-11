@@ -139,9 +139,10 @@ function printStory (story, rules) {
     const rulesets = story[r].map(c => {
       return reverseRules[c]
     })
-    const theories = getTheory(rulesets).length
-    const uncertainty = theories
-    process.stdout.write(`${colorsKey['FgWhite']} ${uncertainty}\n`)
+    const theories = getTheory(rulesets)
+    let numTheories = theories.length
+    numTheories = (numTheories === uncertaintyThreshold) ? `${uncertaintyThreshold}+` : numTheories
+    process.stdout.write(`${colorsKey['FgWhite']} ${numTheories}\n`)
   }
 }
 
