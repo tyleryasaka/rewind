@@ -2,6 +2,8 @@ const S = 4
 const W = 150
 const T = 40
 
+const uncertaintyThreshold = 1000
+
 const colorsKey = {
   FgRed: '\x1b[31m',
   FgGreen: '\x1b[32m',
@@ -101,36 +103,75 @@ function getNeighborCompatibleRulesCount (reverseRules, row) {
     const nextCol = row[(c + 2) % row.length]
     return getIntersectionOf2(reverseRules, col, nextCol)
   })
-  return intersections.map(({ consistentA }, i) => {
+  const validRulesets = intersections.map(({ consistentA }, i) => {
     const { consistentB } = intersections[(i + intersections.length - 1) % intersections.length]
     const { consistentB: consistentC } = intersectionsClose[(i + intersectionsClose.length - 2) % intersectionsClose.length]
     let allConsistent = []
-    // consistentA.forEach(ruleA => {
-    //   consistentB.forEach(ruleB => {
-    //     consistentC.forEach(ruleC => {
-    //       if (
-    //         ((ruleA[0] === ruleB[0]) && (ruleB[0] === ruleC[0])) &&
-    //         ((ruleA[1] === ruleB[1]) && (ruleB[1] === ruleC[1])) &&
-    //         ((ruleA[2] === ruleB[2]) && (ruleB[2] === ruleC[2]))
-    //       ) {
-    //         allConsistent.push(ruleA)
-    //       }
-    //     })
-    //   })
-    // })
     consistentA.forEach(ruleA => {
       consistentB.forEach(ruleB => {
-        if (
-          (ruleA[0] === ruleB[0]) &&
-          (ruleA[1] === ruleB[1]) &&
-          (ruleA[2] === ruleB[2])
-        ) {
-          allConsistent.push(ruleA)
-        }
+        consistentC.forEach(ruleC => {
+          if (
+            ((ruleA[0] === ruleB[0]) && (ruleB[0] === ruleC[0])) &&
+            ((ruleA[1] === ruleB[1]) && (ruleB[1] === ruleC[1])) &&
+            ((ruleA[2] === ruleB[2]) && (ruleB[2] === ruleC[2]))
+          ) {
+            allConsistent.push(ruleA)
+          }
+        })
       })
     })
-    return allConsistent.length
-  }).reduce((l, t) => l + t, 0)
+    // consistentA.forEach(ruleA => {
+    //   consistentB.forEach(ruleB => {
+    //     if (
+    //       (ruleA[0] === ruleB[0]) &&
+    //       (ruleA[1] === ruleB[1]) &&
+    //       (ruleA[2] === ruleB[2])
+    //     ) {
+    //       allConsistent.push(ruleA)
+    //     }
+    //   })
+    // })
+    return allConsistent
+  })
+  // average number of valid rules for each cell which are consistent with neighbors
+  // return validRulesMapping.reduce((t, arr) => arr.length + t, 0) / validRulesMapping.length
+  const theories = getTheory(validRulesets)
+  return theories.length
+}
+
+function getTheory (ruleSets, hypothesis = [], state) {
+  state = state || { found: 0 }
+  if (state.found >= uncertaintyThreshold) {
+    return []
+  }
+  let theories = []
+  if (hypothesis.length === 0) {
+    const firstRuleset = ruleSets[0]
+    firstRuleset.forEach(firstRule => {
+      let newHypothesis = []
+      newHypothesis.push(firstRule)
+      let newTheories = getTheory(ruleSets, newHypothesis, state)
+      theories = theories.concat(newTheories)
+    })
+    return theories.slice(0)
+  }
+  if (hypothesis.length === ruleSets.length) {
+    theories.push(hypothesis)
+    state.found++
+    return theories.slice(0)
+  }
+  const currentRule = hypothesis[hypothesis.length - 1]
+  const nextRuleset = ruleSets[hypothesis.length % ruleSets.length]
+  nextRuleset.forEach(nextRule => {
+    let newHypothesis = hypothesis.slice(0)
+    if ((currentRule[2] === nextRule[0]) && (currentRule[1] === nextRule[2])) {
+      newHypothesis.push(nextRule)
+      let newTheories = getTheory(ruleSets, newHypothesis, state)
+      theories = theories.concat(newTheories)
+    }
+  })
+  const copy = theories.slice(0)
+  return copy
 }
 
 function getIntersectionOf2 (reverseRules, a, b) {
@@ -138,15 +179,22 @@ function getIntersectionOf2 (reverseRules, a, b) {
   const bucketB = reverseRules[b]
   let consistentA = []
   let consistentB = []
+  let consistentAJSON = []
+  let consistentBJSON = []
   bucketA.forEach(ruleA => {
     bucketB.forEach(ruleB => {
       if ((ruleA[2] === ruleB[0]) && (ruleA[1] === ruleB[2])) {
         // These rules are consistent with each other
-        consistentA.push(ruleA)
-        consistentB.push(ruleB)
-        // console.log('consistent')
-      } else {
-        // console.log('not consistent')
+        let aString = JSON.stringify(ruleA)
+        let bString = JSON.stringify(ruleB)
+        if (!consistentAJSON.includes(aString)) {
+          consistentA.push(ruleA)
+          consistentAJSON.push(aString)
+        }
+        if (!consistentBJSON.includes(bString)) {
+          consistentB.push(ruleB)
+          consistentBJSON.push(bString)
+        }
       }
     })
   })
@@ -162,12 +210,17 @@ function printStory (story, rules) {
     }
     const reverseRules = getReverseRules(rules)
     // console.log(reverseRules)
-    const uncertainty = getNeighborCompatibleRulesCount(reverseRules, story[r])
+    // const uncertainty = getNeighborCompatibleRulesCount(reverseRules, story[r])
+    const rulesets = story[r].map(c => {
+      return reverseRules[c]
+    })
+    const theories = getTheory(rulesets).length
+    const uncertainty = theories
     totalUncertainty += uncertainty
-    process.stdout.write(` ${uncertainty}\n`)
+    process.stdout.write(`${colorsKey['FgWhite']} ${uncertainty}\n`)
   }
-  const averageUncertainty = totalUncertainty / story.length
-  console.log(averageUncertainty)
+  // const averageUncertainty = totalUncertainty / story.length
+  // console.log(averageUncertainty)
 }
 
 run()
