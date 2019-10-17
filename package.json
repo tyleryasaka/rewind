@@ -1,0 +1,27 @@
+{
+  "name": "rewind",
+  "version": "0.0.0",
+  "description": "",
+  "main": "rewind.js",
+  "directories": {
+    "test": "tests"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@dagrejs/graphlib": "^2.1.4"
+  },
+  "scripts": {
+    "start": "node rewind.js",
+    "test": "node tests/entropy-test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tyleryasaka/rewind.git"
+  },
+  "author": "Tyler Yasaka",
+  "license": "CC0-1.0",
+  "bugs": {
+    "url": "https://github.com/tyleryasaka/rewind/issues"
+  },
+  "homepage": "https://github.com/tyleryasaka/rewind#readme"
+}

@@ -1,5 +1,5 @@
 const S = 4
-const W = 150
+const W = 180
 const T = 40
 
 const uncertaintyThreshold = 100
