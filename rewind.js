@@ -1,5 +1,5 @@
 const S = 4
-const W = 180
+const W = 12
 const T = 40
 
 const uncertaintyThreshold = 100
@@ -23,6 +23,8 @@ const colors = [
   'FgCyan',
   'FgYellow'
 ]
+
+const { getEntropy } = require('./entropy')
 
 function run () {
   // generate a set of rules
@@ -141,8 +143,10 @@ function printStory (story, rules) {
     })
     const theories = getTheory(rulesets)
     let numTheories = theories.length
+    const row = story[r].map(c => String(c))
+    const { distance } = getEntropy(row, S)
     numTheories = (numTheories === uncertaintyThreshold) ? `${uncertaintyThreshold}+` : numTheories
-    process.stdout.write(`${colorsKey['FgWhite']} ${numTheories}\n`)
+    process.stdout.write(`${colorsKey['FgWhite']}\t${numTheories}\t${distance}\n`)
   }
 }
 

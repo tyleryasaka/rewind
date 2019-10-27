@@ -1,14 +1,19 @@
 const {
-  entropy,
-  Relation,
-  isRelationEquivalent
+  getEntropy,
+  combinations,
+  shannonEntropy
 } = require('../entropy')
 
-const row = [1, 2, 1, 4, 1, 2]
-// const row = [1, 2, 4, 4, 1, 2, 4]
-entropy(row)
+// const row = ['a', 'b', 'a', 'b', 'a', 'b', 'a', 'b']
+const row = ['c', 'd', 'd', 'c', 'b', 'd', 'a', 'a', 'a', 'c']
 
-const relation1 = new Relation(5, 4, 1, 5)
-const relation2 = new Relation(4, 5, 4, 5)
+const result = getEntropy(row, 4)
+console.log('entropy', result.distance, result.path.map(p => JSON.stringify(p)))
+
+// console.log('shannon entropy', shannonEntropy(20, 10))
+
+// const comb = combinations([1,2,3,4,5])
+// console.log('comb', comb)
+
 // console.log(relation1.id, relation2.id)
 // console.log(isRelationEquivalent(relation1, relation2))

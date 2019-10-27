@@ -6,12 +6,15 @@
   "directories": {
     "test": "tests"
   },
-  "dependencies": {},
+  "dependencies": {
+    "js-sha256": "^0.9.0",
+    "lodash": "^4.17.15"
+  },
   "devDependencies": {
     "@dagrejs/graphlib": "^2.1.4"
   },
   "scripts": {
-    "start": "node rewind.js",
+    "start": "node rewind.js --harmony --use_strict",
     "test": "node tests/entropy-test.js"
   },
   "repository": {
