@@ -5,7 +5,8 @@ const {
 } = require('../entropy')
 
 // const row = ['a', 'b', 'a', 'b', 'a', 'b', 'a', 'b']
-const row = ['c', 'd', 'd', 'c', 'b', 'd', 'a', 'a', 'a', 'c']
+// const row = ['c', 'd', 'd', 'c', 'b', 'd', 'a', 'a', 'a', 'c']
+const row = ['a', 'b', 'a', 'b', 'a', 'b']
 
 const result = getEntropy(row, 4)
 console.log('entropy', result.distance, result.path.map(p => JSON.stringify(p)))

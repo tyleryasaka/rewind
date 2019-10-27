@@ -42,10 +42,13 @@ function buildRelationGraph (row, fullRowLength, index = 0, graph = new Graph({ 
   }
   const head = row[0]
   const tail = _.slice(row, 1)
-  tail.forEach((tailItem, tailIndex) => {
-    const relation = asRelation(head, tailItem, tailIndex + 1, fullRowLength)
-    graph.setEdge(index, index + tailIndex + 1, relation)
-  })
+  // Just relate nodes to their direct neighbors for now. To speed up algorithm.
+  const relation = asRelation(head, tail[0], 1, fullRowLength)
+  graph.setEdge(index, index + 1, relation)
+  // tail.forEach((tailItem, tailIndex) => {
+  //   const relation = asRelation(head, tailItem, tailIndex + 1, fullRowLength)
+  //   graph.setEdge(index, index + tailIndex + 1, relation)
+  // })
   return buildRelationGraph(tail, fullRowLength, index + 1, graph)
 }
 
@@ -265,6 +268,21 @@ function cellsForToken (token) {
   return _.uniq(cells)
 }
 
+function pathIsCovered ({ takenCells, currentToken }, coveredPaths) {
+  const entropy = currentToken ? currentToken.entropy : null
+  const orderedCells = _.sortBy(takenCells, c => c).join('-')
+  const hash = `${orderedCells}-${entropy}`
+  if (!entropy) {
+    return false
+  }
+  if (!coveredPaths[hash] || entropy < coveredPaths[hash]) {
+    coveredPaths[hash] = entropy
+    return false
+  } else {
+    return true
+  }
+}
+
 function getEntropy (row, numStates) {
   const unique = uniqueTokens(row)
   const allTokens = _.mapValues(unique, token => {
@@ -276,7 +294,12 @@ function getEntropy (row, numStates) {
   const isDestination = (node) => {
     return node.takenCells.length === row.length
   }
+  // short circuit redundancy
+  const coveredPaths = {}
   const getNeighbors = (node) => {
+    if (pathIsCovered(node, coveredPaths)) {
+      return []
+    }
     let remainingTokens
     if (!node.currentToken) {
       // initial node - start with all tokens
